@@ -1,0 +1,41 @@
+body {
+ background-image: url("images/zioworld.png");
+ height: 100%;
+ background-position: center;
+ background-repeat: no-repeat;
+ background-size: cover;
+ font-family: "Arial", monospace;
+ font-size: 1.13em;
+ font-weight: bold;
+}
+#subscribe {
+  margin: 250px 500px 0;
+}
+.btn {
+   color: purple;
+   cursor: pointer;
+   display: inline-block;
+   letter-spacing: 0.075em;
+   padding: .8em 1em;
+   position: relative;
+   align-self: center;
+   text-transform: uppercase;
+   z-index: 1;
+   box-shadow: -0.5em .5em transparentize(purple,1);
+   transform-origin: left bottom;
+}
+.qr {
+   color: green;
+   background: yellow;
+   font-weight: bold;
+   cursor: pointer;
+   display: inline-block;
+   letter-spacing: 0.075em;
+   padding: .8em 1em;
+   position: relative;
+   align-self: center;
+   text-transform: uppercase;
+   z-index: 1;
+   box-shadow: -0.5em .5em transparentize(purple,1);
+   transform-origin: left bottom;
+}

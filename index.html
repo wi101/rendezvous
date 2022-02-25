@@ -1,0 +1,29 @@
+<html>
+<head>
+    <title>
+        Book you sport and ZIO!
+    </title>
+    <link rel="stylesheet" href="styles.css">
+    <script type="text/javascript" src="app.js"></script>
+</head>
+<body>
+<br>
+<br>
+<div>
+    <form>
+        <input type="button" value="Check-in with your QR Code" class = "qr" onclick="checkin()">
+        <input type="file" id="path" name="qrCode">
+    </form>
+</div>
+
+<form id="subscribe" autocomplete="off">
+    <label> Name </label>
+    <input type="text" id="name" size="30"/> <br> <br>
+    <label> Email </label>
+    <input type="text" id="email" size="30"/> <br> <br>
+    <input class= "btn" type="button" value="Book your spot!" onclick="subscribe()"/>
+</form>
+</div>
+
+</body>
+</html>

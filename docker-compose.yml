@@ -1,0 +1,15 @@
+version: "3.2"
+
+services:
+  postgresql:
+    container_name: rendezvous
+    image: postgres:11-alpine
+    environment:
+      POSTGRES_DB: rdv-zio
+      POSTGRES_USER: "***"
+      POSTGRES_PASSWORD: "***"
+    ports:
+      - "5432:5432"
+    restart: always
+    tmpfs:
+      - /var/lib/postgresql/data:rw
