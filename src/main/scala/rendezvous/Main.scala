@@ -65,10 +65,9 @@ object Main extends ZIOAppDefault {
   private def httpResponse[R, A](rio: RIO[R, A], onSuccess: A => Response) =
     rio.fold(
       {
-        case Error.DecodeError(msg)         => Response.fromHttpError(HttpError.BadRequest(msg))
-        case Error.InternalServerError(msg) => Response.fromHttpError(HttpError.InternalServerError(msg))
-        case Error.NotFound(msg)            => Response.fromHttpError(HttpError.PreconditionFailed(msg))
-        case e                              => Response.fromHttpError(HttpError.InternalServerError(e.getMessage))
+        case Error.DecodeError(msg) => Response.fromHttpError(HttpError.BadRequest(msg))
+        case Error.NotFound(msg)    => Response.fromHttpError(HttpError.UnprocessableEntity(msg))
+        case e                      => Response.fromHttpError(HttpError.InternalServerError(e.getMessage))
       },
       onSuccess
     )

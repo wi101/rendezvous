@@ -34,7 +34,8 @@ function show_image(title, text, src, w, h, alt) {
 }
 
 function checkin() {
-  const path = document.getElementById("path").value.replace("C:\\fakepath\\", "images/");
+  const path = "images/" + document.getElementById("path").files[0].name // very bad.. just to make it work
+  // DON'T LOOK UP
   const successImg = "images/successImg.png"
   const failImg = "images/failImg.png"
   console.log('the path is: '+path)
