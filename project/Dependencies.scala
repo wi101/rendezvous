@@ -5,7 +5,7 @@ object Dependencies {
   final val Zio         = "2.0.3"
   final val ZioConfig   = "3.0.2"
   final val ZioHttp     = "2.0.0-RC11"
-  final val ZioJson     = "0.3.0-RC10"
+  final val ZioJson     = "0.3.0"
   final val ZioPrelude  = "1.0.0-RC15"
   final val ZioQuill    = "4.4.0"
   final val PostgresSql = "42.3.2"
