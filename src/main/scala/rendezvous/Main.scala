@@ -10,7 +10,7 @@ import zhttp.http._
 import zhttp.service.Server
 import zio.Console.{printLine, readLine}
 import zio.json.EncoderOps
-import zio.{Clock, Console, RIO, Random, Task, ZIO, ZIOAppArgs, ZIOAppDefault}
+import zio.{Clock, Console, RIO, Random, Task, ZIO, ZIOAppArgs, ZIOAppDefault, ZLayer}
 
 import java.nio.file.{Path, Paths}
 
@@ -54,7 +54,13 @@ object Main extends ZIOAppDefault {
                     printLine(s"There was an error! ${e.getMessage}")
                   ) *> f.interrupt
     } yield ())
-      .provide(config.live, QRCodeService.live, DBManager.live, ParticipantService.live)
+      .provide(
+        ZLayer.succeed(Random.RandomLive),
+        config.live,
+        QRCodeService.live,
+        DBManager.live,
+        ParticipantService.live
+      )
       .debug
 
   private def makePath(path: String): Task[Path] =

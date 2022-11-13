@@ -5,6 +5,7 @@ import rendezvous.models._
 import zio._
 
 import java.nio.file.Path
+import zio.Random
 
 trait ParticipantService {
   def addParticipant(request: CreateParticipantRequest): Task[Path]
@@ -12,10 +13,10 @@ trait ParticipantService {
 }
 
 object ParticipantService {
-  private def service(db: DBManager, qRCodeService: QRCodeService) = new ParticipantService {
+  private def service(db: DBManager, qRCodeService: QRCodeService, random: Random) = new ParticipantService {
     override def addParticipant(request: CreateParticipantRequest): Task[Path] =
       for {
-        participant <- Participant.createFromRequest(request)
+        participant <- Participant.createFromRequest(request).provide(ZLayer.succeed(random))
         _           <- db.save(participant)
         path        <- qRCodeService.generateFor(participant.id)
       } yield path
@@ -26,7 +27,7 @@ object ParticipantService {
         .flatMap(_.fold[Task[Participant]](ZIO.fail(Error.NotFound("Participant is not found")))(db.getById))
   }
 
-  val live: URLayer[DBManager with QRCodeService, ParticipantService] = ZLayer.fromFunction(service _)
+  val live: URLayer[DBManager with QRCodeService with Random, ParticipantService] = ZLayer.fromFunction(service _)
 
   def addParticipant(request: CreateParticipantRequest): RIO[ParticipantService, Path] =
     ZIO.serviceWithZIO(_.addParticipant(request))

@@ -4,13 +4,16 @@ import io.getquill.MappedEncoding
 import rendezvous.models.Error.DecodeError
 import zio.json.{DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 import zio.prelude.{Assertion, Newtype}
-import zio.{Random, UIO}
+import zio.{Random, ZIO}
 
 import java.util.UUID
 import scala.util.Try
 
 object ParticipantId extends Newtype[UUID] {
-  def create: UIO[ParticipantId] = Random.RandomLive.nextUUID.map(ParticipantId.wrap)
+  def create: ZIO[Random, Nothing, ParticipantId] =
+    ZIO.serviceWithZIO[Random] { random =>
+      random.nextUUID.map(ParticipantId.wrap)
+    }
 
   def parse(id: String): Either[DecodeError, ParticipantId] =
     for {
@@ -69,7 +72,7 @@ object Name extends Newtype[String] {
 
 final case class Participant(id: ParticipantId, name: Name, email: Email)
 object Participant {
-  def createFromRequest(pendingParticipant: CreateParticipantRequest): UIO[Participant] =
+  def createFromRequest(pendingParticipant: CreateParticipantRequest): ZIO[Random, Nothing, Participant] =
     ParticipantId.create.map(Participant(_, pendingParticipant.name, pendingParticipant.email))
 
   implicit val encoder: JsonEncoder[Participant] = DeriveJsonEncoder.gen[Participant]
