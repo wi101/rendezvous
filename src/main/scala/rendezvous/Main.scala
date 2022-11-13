@@ -10,7 +10,7 @@ import zhttp.http._
 import zhttp.service.Server
 import zio.Console.{printLine, readLine}
 import zio.json.EncoderOps
-import zio.{Console, RIO, Random, Task, ZEnv, ZIO, ZIOAppArgs, ZIOAppDefault}
+import zio.{Clock, Console, RIO, Random, Task, ZIO, ZIOAppArgs, ZIOAppDefault, ZLayer}
 
 import java.nio.file.{Path, Paths}
 
@@ -23,11 +23,11 @@ object Main extends ZIOAppDefault {
       case req @ POST -> !! / "rendezvous" =>
         httpResponse[ParticipantService, Path](
           for {
-            body       <- req.bodyAsString
+            body       <- req.body.asString
             subscriber <- ZIO.fromEither(CreateParticipantRequest.parse(body))
-            path       <- ParticipantService(_.addParticipant(subscriber))
+            path       <- ParticipantService.addParticipant(subscriber)
           } yield path,
-          p => Response.text(s"$p").setStatus(Status.CREATED)
+          p => Response.text(s"$p").setStatus(Status.Created)
         )
 
       case request @ GET -> !! / "rendezvous" / "infoQR" if request.url.queryParams.contains("path") =>
@@ -37,7 +37,7 @@ object Main extends ZIOAppDefault {
                              .fromOption(request.url.queryParams.get("path").flatMap(_.headOption))
                              .orElseFail(DecodeError("invalid path"))
             path        <- makePath(p)
-            participant <- ParticipantService(_.getParticipantByQRCode(path))
+            participant <- ParticipantService.getParticipantByQRCode(path)
           } yield participant,
           p => Response.json(p.toJson)
         )
@@ -45,7 +45,7 @@ object Main extends ZIOAppDefault {
       case GET -> !! / "health" => ZIO.succeed(Response.ok)
     }
 
-  override def run: ZIO[ZEnv with ZIOAppArgs, Any, Any] =
+  override def run =
     (for {
       _        <- QuillContext.migrate
       endpoint <- ZIO.serviceWith[AppConfig](_.endpoint)
@@ -54,11 +54,18 @@ object Main extends ZIOAppDefault {
                     printLine(s"There was an error! ${e.getMessage}")
                   ) *> f.interrupt
     } yield ())
-      .provide(Random.live, Console.live, config.live, QRCodeService.live, DBManager.live, ParticipantService.live)
+      .provide(
+        ZLayer.succeed(Random.RandomLive),
+        config.live,
+        QRCodeService.live,
+        DBManager.live,
+        ParticipantService.live
+      )
       .debug
 
   private def makePath(path: String): Task[Path] =
-    Task(Paths.get(path))
+    ZIO
+      .attempt(Paths.get(path))
       .mapError(e => Error.DecodeError(s"Invalid path: $path. Reason: ${e.getMessage}"))
       .filterOrDie(_.toFile.exists())(Error.NotFound(s"File $path doesn't exist"))
 

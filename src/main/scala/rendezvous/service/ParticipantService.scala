@@ -12,10 +12,7 @@ trait ParticipantService {
   def getParticipantByQRCode(path: Path): Task[Participant]
 }
 
-object ParticipantService extends Accessible[ParticipantService] {
-
-  val live: URLayer[DBManager with QRCodeService with Random, ParticipantService] = (service _).toLayer
-
+object ParticipantService {
   private def service(db: DBManager, qRCodeService: QRCodeService, random: Random) = new ParticipantService {
     override def addParticipant(request: CreateParticipantRequest): Task[Path] =
       for {
@@ -27,7 +24,15 @@ object ParticipantService extends Accessible[ParticipantService] {
     override def getParticipantByQRCode(path: Path): Task[Participant] =
       qRCodeService
         .readFrom(path)
-        .flatMap(_.fold[Task[Participant]](Task.fail(Error.NotFound("Participant is not found")))(db.getById))
+        .flatMap(_.fold[Task[Participant]](ZIO.fail(Error.NotFound("Participant is not found")))(db.getById))
   }
+
+  val live: URLayer[DBManager with QRCodeService with Random, ParticipantService] = ZLayer.fromFunction(service _)
+
+  def addParticipant(request: CreateParticipantRequest): RIO[ParticipantService, Path] =
+    ZIO.serviceWithZIO(_.addParticipant(request))
+
+  def getParticipantByQRCode(path: Path): RIO[ParticipantService, Participant] =
+    ZIO.serviceWithZIO(_.getParticipantByQRCode(path))
 
 }
