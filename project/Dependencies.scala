@@ -2,7 +2,7 @@ import sbt._
 object Dependencies {
 
   final val Flyway      = "8.5.1"
-  final val Zio         = "2.0.2"
+  final val Zio         = "2.0.3"
   final val ZioConfig   = "3.0.2"
   final val ZioHttp     = "2.0.0-RC11"
   final val ZioJson     = "0.3.0-RC10"
