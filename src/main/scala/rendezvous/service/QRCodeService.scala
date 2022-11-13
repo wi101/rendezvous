@@ -7,7 +7,7 @@ import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import com.google.zxing.qrcode.{QRCodeReader, QRCodeWriter}
 import rendezvous.config.QRCodeConfig
 import rendezvous.models.ParticipantId
-import zio.{Function1ToLayerOps, IO, Task, ZLayer}
+import zio.{ZIO, Task, ZLayer}
 
 import java.awt.Color
 import java.awt.image.BufferedImage
@@ -22,7 +22,7 @@ trait QRCodeService {
 
 object QRCodeService {
 
-  val live: ZLayer[QRCodeConfig, Nothing, QRCodeService] = (service _).toLayer
+  val live: ZLayer[QRCodeConfig, Nothing, QRCodeService] = ZLayer.fromFunction(service _)
 
   private def service(config: QRCodeConfig)   = new QRCodeService {
     override def generateFor(id: ParticipantId): Task[Path] = {
@@ -34,10 +34,10 @@ object QRCodeService {
       ).asJava
 
       (for {
-        bitMatrix <- Task(writer.encode(id.toString, BarcodeFormat.QR_CODE, config.width, config.height, hints))
+        bitMatrix <- ZIO.attempt(writer.encode(id.toString, BarcodeFormat.QR_CODE, config.width, config.height, hints))
         image     <- makeImage(bitMatrix)
-        filePath  <- Task(Paths.get(s"${config.pathPrefix}/$id.png"))
-        _         <- Task(ImageIO.write(image, "png", filePath.toFile))
+        filePath  <- ZIO.attempt(Paths.get(s"${config.pathPrefix}/$id.png"))
+        _         <- ZIO.attempt(ImageIO.write(image, "png", filePath.toFile))
       } yield filePath)
         .debug("generate QR code")
     }
@@ -49,22 +49,22 @@ object QRCodeService {
       ).asJava
 
       for {
-        img     <- Task(ImageIO.read(path.toFile))
+        img     <- ZIO.attempt(ImageIO.read(path.toFile))
         w        = img.getWidth
         h        = img.getHeight
         pixels   = new Array[Int](w * h)
-        _       <- Task(img.getRGB(0, 0, w, h, pixels, 0, w))
+        _       <- ZIO.attempt(img.getRGB(0, 0, w, h, pixels, 0, w))
         source   = new RGBLuminanceSource(img.getWidth, img.getHeight, pixels)
-        bitmap  <- Task(new BinaryBitmap(new GlobalHistogramBinarizer(source)))
+        bitmap  <- ZIO.attempt(new BinaryBitmap(new GlobalHistogramBinarizer(source)))
         reader   = new QRCodeReader()
-        uuidStr <- Task(reader.decode(bitmap, hints).getText)
-        result  <- IO.fromEither(ParticipantId.parse(uuidStr))
+        uuidStr <- ZIO.attempt(reader.decode(bitmap, hints).getText)
+        result  <- ZIO.fromEither(ParticipantId.parse(uuidStr))
       } yield result
     }.option
       .debug("read from QR code")
 
   }
-  private def makeImage(bitMatrix: BitMatrix) = Task {
+  private def makeImage(bitMatrix: BitMatrix) = ZIO.attempt {
     val idWidth    = bitMatrix.getWidth
     val image      = new BufferedImage(idWidth, idWidth, BufferedImage.TYPE_BYTE_BINARY)
     val graphics2D = image.createGraphics()

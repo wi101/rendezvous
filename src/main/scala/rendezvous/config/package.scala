@@ -2,7 +2,7 @@ package rendezvous
 
 import zio.TaskLayer
 import zio.config.ConfigDescriptor._
-import zio.config.magnolia.DeriveConfigDescriptor
+import zio.config.magnolia._
 import zio.config.syntax._
 import zio.config.typesafe.TypesafeConfig
 
@@ -12,7 +12,7 @@ package object config {
 
   final val Root = "rendezvous"
 
-  private final val Descriptor = DeriveConfigDescriptor.descriptor[AppConfig]
+  private final val Descriptor = descriptor[AppConfig]
 
   private val appConfig = TypesafeConfig.fromResourcePath(nested(Root)(Descriptor))
 
